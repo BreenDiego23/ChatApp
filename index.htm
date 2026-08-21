@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Private Chat</title>
+  </head>
+
+  <body>
+    <h1>Private Chat</h1>
+
+    <div id="joinArea">
+      <input id="usernameInput" type="text" placeholder="Your name" />
+      <input id="passwordInput" type="password" placeholder="Shared password" />
+      <button id="joinButton">Join Chat</button>
+    </div>
+
+    <p id="statusMessage" role="status"></p>
+
+    <div id="chatArea" style="display: none">
+      <div id="messages"></div>
+
+      <input id="messageInput" type="text" placeholder="Type a message" />
+      <button id="sendButton">Send</button>
+    </div>
+    <script src="practice.js"></script>
+  </body>
+</html>
