@@ -50,6 +50,10 @@ async def javascript(_request):
     return web.FileResponse(PROJECT_DIR / "practice.js")
 
 
+async def stylesheet(_request):
+    return web.FileResponse(PROJECT_DIR / "styles.css")
+
+
 async def health(_request):
     return web.Response(text="ok")
 
@@ -145,6 +149,7 @@ app = web.Application()
 app.router.add_get("/", index)
 app.router.add_get("/index.htm", index)
 app.router.add_get("/practice.js", javascript)
+app.router.add_get("/styles.css", stylesheet)
 app.router.add_get("/health", health)
 app.router.add_get("/ws", websocket_handler)
 

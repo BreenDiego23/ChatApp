@@ -1,26 +1,106 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>Private Chat</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#241427" />
+    <title>Afterglow — Private Chat</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
 
   <body>
-    <h1>Private Chat</h1>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
 
-    <div id="joinArea">
-      <input id="usernameInput" type="text" placeholder="Your name" />
-      <input id="passwordInput" type="password" placeholder="Shared password" />
-      <button id="joinButton">Join Chat</button>
-    </div>
+    <main class="app-shell">
+      <section id="joinArea" class="join-card" aria-labelledby="welcomeTitle">
+        <div class="seal" aria-hidden="true">
+          <span>✦</span>
+        </div>
+        <p class="eyebrow">A private place for two</p>
+        <h1 id="welcomeTitle">Afterglow</h1>
+        <p class="welcome-copy">
+          Step away from the noise. Your conversation is waiting.
+        </p>
 
-    <p id="statusMessage" role="status"></p>
+        <div class="join-form">
+          <label for="usernameInput">Your name</label>
+          <div class="input-wrap">
+            <span aria-hidden="true">✎</span>
+            <input
+              id="usernameInput"
+              type="text"
+              placeholder="How should you appear?"
+              maxlength="40"
+              autocomplete="name"
+            />
+          </div>
 
-    <div id="chatArea" style="display: none">
-      <div id="messages"></div>
+          <label for="passwordInput">Shared password</label>
+          <div class="input-wrap">
+            <span aria-hidden="true">◇</span>
+            <input
+              id="passwordInput"
+              type="password"
+              placeholder="Your private key"
+              autocomplete="current-password"
+            />
+          </div>
 
-      <input id="messageInput" type="text" placeholder="Type a message" />
-      <button id="sendButton">Send</button>
-    </div>
+          <button id="joinButton" class="primary-button" type="button">
+            Enter Afterglow
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+
+        <p id="statusMessage" class="join-status" role="status"></p>
+        <p class="privacy-note"><span aria-hidden="true">⌁</span> Shared only with people who know your password</p>
+      </section>
+
+      <section id="chatArea" class="chat-card" aria-label="Private chat" hidden>
+        <header class="chat-header">
+          <div class="brand-mark" aria-hidden="true">✦</div>
+          <div class="chat-heading">
+            <p class="eyebrow">Your private room</p>
+            <h1>Afterglow</h1>
+          </div>
+          <div class="presence" title="Connection status">
+            <span class="presence-dot" aria-hidden="true"></span>
+            <span id="connectionStatus">Connected</span>
+          </div>
+        </header>
+
+        <div class="room-note">
+          <span aria-hidden="true">◇</span>
+          <span>Signed in as <strong id="activeUser"></strong></span>
+        </div>
+
+        <div id="messages" class="messages" aria-live="polite" aria-label="Messages">
+          <div id="emptyState" class="empty-state">
+            <div aria-hidden="true">☾</div>
+            <p>Your room is quiet.</p>
+            <span>Send something lovely.</span>
+          </div>
+        </div>
+
+        <div id="chatNotice" class="chat-notice" role="status"></div>
+
+        <footer class="composer">
+          <label class="sr-only" for="messageInput">Message</label>
+          <input
+            id="messageInput"
+            type="text"
+            placeholder="Write a message…"
+            maxlength="2000"
+            autocomplete="off"
+          />
+          <button id="sendButton" type="button" aria-label="Send message" title="Send message">
+            <span aria-hidden="true">↑</span>
+          </button>
+        </footer>
+      </section>
+    </main>
+
     <script src="practice.js"></script>
   </body>
 </html>

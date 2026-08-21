@@ -7,6 +7,10 @@ const messages = document.getElementById("messages");
 const joinArea = document.getElementById("joinArea");
 const chatArea = document.getElementById("chatArea");
 const statusMessage = document.getElementById("statusMessage");
+const chatNotice = document.getElementById("chatNotice");
+const connectionStatus = document.getElementById("connectionStatus");
+const activeUser = document.getElementById("activeUser");
+const emptyState = document.getElementById("emptyState");
 
 let socket;
 let username = "";
@@ -17,8 +21,40 @@ function websocketUrl() {
   return `${websocketProtocol}//${window.location.host}/ws`;
 }
 
-function showStatus(message) {
+function showJoinStatus(message, isError = false) {
   statusMessage.textContent = message;
+  statusMessage.classList.toggle("is-error", isError);
+}
+
+function setConnected(isConnected) {
+  connectionStatus.textContent = isConnected ? "Connected" : "Disconnected";
+  document.querySelector(".presence").classList.toggle("is-offline", !isConnected);
+}
+
+function addMessage(data) {
+  emptyState?.remove();
+
+  const isMine = data.username === username;
+  const messageRow = document.createElement("article");
+  messageRow.className = `message ${isMine ? "message--mine" : "message--theirs"}`;
+
+  const meta = document.createElement("div");
+  meta.className = "message-meta";
+
+  const author = document.createElement("strong");
+  author.textContent = isMine ? "You" : data.username;
+
+  const time = document.createElement("time");
+  time.textContent = data.timestamp;
+
+  const bubble = document.createElement("div");
+  bubble.className = "message-bubble";
+  bubble.textContent = data.message;
+
+  meta.append(author, time);
+  messageRow.append(meta, bubble);
+  messages.appendChild(messageRow);
+  messages.scrollTop = messages.scrollHeight;
 }
 
 function connectToChat() {
@@ -26,12 +62,12 @@ function connectToChat() {
   const password = passwordInput.value;
 
   if (username === "" || password === "") {
-    showStatus("Enter your name and the shared password.");
+    showJoinStatus("Enter your name and the shared password.", true);
     return;
   }
 
   joinButton.disabled = true;
-  showStatus("Connecting…");
+  showJoinStatus("Opening your room…");
   socket = new WebSocket(websocketUrl());
 
   socket.onopen = () => {
@@ -44,34 +80,33 @@ function connectToChat() {
     if (data.type === "auth_ok") {
       authenticated = true;
       passwordInput.value = "";
-      joinArea.style.display = "none";
-      chatArea.style.display = "block";
-      showStatus("");
+      joinArea.hidden = true;
+      chatArea.hidden = false;
+      activeUser.textContent = username;
+      chatNotice.textContent = "";
+      setConnected(true);
       messageInput.focus();
       return;
     }
 
     if (data.type === "auth_error") {
-      showStatus(data.message);
+      showJoinStatus(data.message, true);
       return;
     }
 
     if (data.type === "message") {
-      const newMessage = document.createElement("p");
-      newMessage.textContent =
-        data.username + ": " + data.message + " - " + data.timestamp;
-      messages.appendChild(newMessage);
-      messages.scrollTop = messages.scrollHeight;
+      addMessage(data);
     }
   };
 
   socket.onerror = () => {
-    showStatus("Could not connect to the chat. Try again in a moment.");
+    showJoinStatus("Could not connect. Try again in a moment.", true);
   };
 
   socket.onclose = () => {
     if (authenticated) {
-      showStatus("Disconnected. Refresh the page to reconnect.");
+      setConnected(false);
+      chatNotice.textContent = "Connection lost. Refresh the page to reconnect.";
     }
     authenticated = false;
     joinButton.disabled = false;
@@ -80,10 +115,12 @@ function connectToChat() {
 
 joinButton.addEventListener("click", connectToChat);
 
-passwordInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    connectToChat();
-  }
+[usernameInput, passwordInput].forEach((input) => {
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      connectToChat();
+    }
+  });
 });
 
 sendButton.addEventListener("click", () => {
@@ -99,7 +136,8 @@ sendButton.addEventListener("click", () => {
 });
 
 messageInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
     sendButton.click();
   }
 });
