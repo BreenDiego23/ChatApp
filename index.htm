@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#241427" />
-    <title>Afterglow — Private Chat</title>
+    <meta name="theme-color" content="#ffdfe4" />
+    <title>BabaChat — Our Private Chat</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
 
@@ -14,13 +14,13 @@
 
     <main class="app-shell">
       <section id="joinArea" class="join-card" aria-labelledby="welcomeTitle">
-        <div class="seal" aria-hidden="true">
-          <span>✦</span>
+        <div class="character-hero">
+          <img src="assets/baba-hearts.webp" alt="Two cute characters holding hearts" />
         </div>
-        <p class="eyebrow">A private place for two</p>
-        <h1 id="welcomeTitle">Afterglow</h1>
+        <p class="eyebrow">A little place for us</p>
+        <h1 id="welcomeTitle">BabaChat</h1>
         <p class="welcome-copy">
-          Step away from the noise. Your conversation is waiting.
+          Where every message feels like a tiny hug.
         </p>
 
         <div class="join-form">
@@ -48,21 +48,23 @@
           </div>
 
           <button id="joinButton" class="primary-button" type="button">
-            Enter Afterglow
+            Enter BabaChat
             <span aria-hidden="true">→</span>
           </button>
         </div>
 
         <p id="statusMessage" class="join-status" role="status"></p>
-        <p class="privacy-note"><span aria-hidden="true">⌁</span> Shared only with people who know your password</p>
+        <p class="privacy-note"><span aria-hidden="true">♥</span> Our cozy corner, protected by a shared password</p>
       </section>
 
       <section id="chatArea" class="chat-card" aria-label="Private chat" hidden>
         <header class="chat-header">
-          <div class="brand-mark" aria-hidden="true">✦</div>
+          <div class="brand-mark">
+            <img src="assets/baba-together.jpeg" alt="Cute bear and panda characters together" />
+          </div>
           <div class="chat-heading">
-            <p class="eyebrow">Your private room</p>
-            <h1>Afterglow</h1>
+            <p class="eyebrow">Just you + me</p>
+            <h1>BabaChat</h1>
           </div>
           <div class="presence" title="Connection status">
             <span class="presence-dot" aria-hidden="true"></span>
@@ -71,15 +73,14 @@
         </header>
 
         <div class="room-note">
-          <span aria-hidden="true">◇</span>
-          <span>Signed in as <strong id="activeUser"></strong></span>
+          <span aria-hidden="true">♡</span>
+          <span>Our cozy corner · Signed in as <strong id="activeUser"></strong></span>
         </div>
 
         <div id="messages" class="messages" aria-live="polite" aria-label="Messages">
           <div id="emptyState" class="empty-state">
-            <div aria-hidden="true">☾</div>
-            <p>Your room is quiet.</p>
-            <span>Send something lovely.</span>
+            <div class="empty-state-heart" aria-hidden="true">💌</div>
+            <span>Send Baba a little love.</span>
           </div>
         </div>
 

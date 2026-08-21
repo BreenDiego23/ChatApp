@@ -150,6 +150,7 @@ app.router.add_get("/", index)
 app.router.add_get("/index.htm", index)
 app.router.add_get("/practice.js", javascript)
 app.router.add_get("/styles.css", stylesheet)
+app.router.add_static("/assets/", PROJECT_DIR / "assets")
 app.router.add_get("/health", health)
 app.router.add_get("/ws", websocket_handler)
 
