@@ -4,7 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#ffdfe4" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="BabaChat" />
     <title>BabaChat — Our Private Chat</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/assets/icon-192.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
 
@@ -72,9 +77,16 @@
           </div>
         </header>
 
-        <div class="room-note">
-          <span aria-hidden="true">♡</span>
-          <span>Our cozy corner · Signed in as <strong id="activeUser"></strong></span>
+        <div class="room-toolbar">
+          <div class="room-note">
+            <span aria-hidden="true">♡</span>
+            <span>Our cozy corner · Signed in as <strong id="activeUser"></strong></span>
+          </div>
+          <button id="notificationButton" class="notification-button" type="button">
+            <span aria-hidden="true">🔔</span>
+            <span id="notificationButtonLabel">Turn on alerts</span>
+          </button>
+          <p id="notificationNotice" class="notification-notice" role="status" hidden></p>
         </div>
 
         <div id="messages" class="messages" aria-live="polite" aria-label="Messages">

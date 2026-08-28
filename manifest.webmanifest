@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "BabaChat",
+  "short_name": "BabaChat",
+  "description": "Our cozy private chat.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fff8f5",
+  "theme_color": "#ffdfe4",
+  "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
