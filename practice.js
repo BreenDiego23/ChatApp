@@ -10,7 +10,7 @@ const statusMessage = document.getElementById("statusMessage");
 const chatNotice = document.getElementById("chatNotice");
 const connectionStatus = document.getElementById("connectionStatus");
 const activeUser = document.getElementById("activeUser");
-const emptyState = document.getElementById("emptyState");
+let emptyState = document.getElementById("emptyState");
 const notificationButton = document.getElementById("notificationButton");
 const notificationButtonLabel = document.getElementById("notificationButtonLabel");
 const notificationNotice = document.getElementById("notificationNotice");
@@ -19,6 +19,10 @@ let socket;
 let username = "";
 let authenticated = false;
 let serviceWorkerRegistration;
+let reconnectPassword = "";
+let reconnectTimer;
+let reconnectAttempt = 0;
+let shouldReconnect = false;
 
 function websocketUrl() {
   const websocketProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -33,6 +37,41 @@ function showJoinStatus(message, isError = false) {
 function setConnected(isConnected) {
   connectionStatus.textContent = isConnected ? "Connected" : "Disconnected";
   document.querySelector(".presence").classList.toggle("is-offline", !isConnected);
+}
+
+function resetMessages() {
+  messages.replaceChildren();
+
+  emptyState = document.createElement("div");
+  emptyState.id = "emptyState";
+  emptyState.className = "empty-state";
+
+  const heart = document.createElement("div");
+  heart.className = "empty-state-heart";
+  heart.setAttribute("aria-hidden", "true");
+  heart.textContent = "💌";
+
+  const prompt = document.createElement("span");
+  prompt.textContent = "Send Baba a little love.";
+
+  emptyState.append(heart, prompt);
+  messages.appendChild(emptyState);
+}
+
+function socketIsActive() {
+  return socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING;
+}
+
+function scheduleReconnect(delay) {
+  if (!shouldReconnect || !username || !reconnectPassword || socketIsActive()) {
+    return;
+  }
+
+  window.clearTimeout(reconnectTimer);
+  const wait = delay ?? Math.min(1000 * (2 ** reconnectAttempt), 10000);
+  reconnectAttempt += 1;
+  chatNotice.textContent = navigator.onLine ? "Reconnecting…" : "Waiting for internet…";
+  reconnectTimer = window.setTimeout(() => connectToChat(true), wait);
 }
 
 function isIosDevice() {
@@ -198,28 +237,55 @@ function addMessage(data) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-function connectToChat() {
-  username = usernameInput.value.trim();
-  const password = passwordInput.value;
-
-  if (username === "" || password === "") {
-    showJoinStatus("Enter your name and the shared password.", true);
+function connectToChat(isReconnect = false) {
+  if (socketIsActive()) {
     return;
   }
 
-  joinButton.disabled = true;
-  showJoinStatus("Opening your room…");
-  socket = new WebSocket(websocketUrl());
+  if (!isReconnect) {
+    username = usernameInput.value.trim();
+    reconnectPassword = passwordInput.value;
+  }
 
-  socket.onopen = () => {
-    socket.send(JSON.stringify({ type: "auth", username, password }));
+  const password = reconnectPassword;
+
+  if (username === "" || password === "") {
+    if (!isReconnect) {
+      showJoinStatus("Enter your name and the shared password.", true);
+    }
+    return;
+  }
+
+  if (!isReconnect) {
+    joinButton.disabled = true;
+    showJoinStatus("Opening your room…");
+  }
+
+  const newSocket = new WebSocket(websocketUrl());
+  socket = newSocket;
+
+  newSocket.onopen = () => {
+    if (socket !== newSocket) {
+      return;
+    }
+    newSocket.send(JSON.stringify({ type: "auth", username, password }));
   };
 
-  socket.onmessage = (event) => {
+  newSocket.onmessage = (event) => {
+    if (socket !== newSocket) {
+      return;
+    }
+
     const data = JSON.parse(event.data);
 
     if (data.type === "auth_ok") {
+      if (isReconnect) {
+        resetMessages();
+      }
+
       authenticated = true;
+      shouldReconnect = true;
+      reconnectAttempt = 0;
       passwordInput.value = "";
       joinArea.hidden = true;
       chatArea.hidden = false;
@@ -232,6 +298,8 @@ function connectToChat() {
     }
 
     if (data.type === "auth_error") {
+      shouldReconnect = false;
+      reconnectPassword = "";
       showJoinStatus(data.message, true);
       return;
     }
@@ -252,27 +320,39 @@ function connectToChat() {
     }
   };
 
-  socket.onerror = () => {
-    showJoinStatus("Could not connect. Try again in a moment.", true);
+  newSocket.onerror = () => {
+    if (socket !== newSocket) {
+      return;
+    }
+
+    if (!isReconnect) {
+      showJoinStatus("Could not connect. Try again in a moment.", true);
+    }
   };
 
-  socket.onclose = () => {
-    if (authenticated) {
-      setConnected(false);
-      chatNotice.textContent = "Connection lost. Refresh the page to reconnect.";
+  newSocket.onclose = () => {
+    if (socket !== newSocket) {
+      return;
     }
+
     authenticated = false;
-    joinButton.disabled = false;
+    setConnected(false);
+
+    if (shouldReconnect) {
+      scheduleReconnect();
+    } else {
+      joinButton.disabled = false;
+    }
   };
 }
 
-joinButton.addEventListener("click", connectToChat);
+joinButton.addEventListener("click", () => connectToChat(false));
 notificationButton.addEventListener("click", enableNotifications);
 
 [usernameInput, passwordInput].forEach((input) => {
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
-      connectToChat();
+      connectToChat(false);
     }
   });
 });
@@ -280,13 +360,32 @@ notificationButton.addEventListener("click", enableNotifications);
 sendButton.addEventListener("click", () => {
   const message = messageInput.value.trim();
 
-  if (message === "" || !authenticated || socket.readyState !== WebSocket.OPEN) {
+  if (message === "" || !authenticated || socket?.readyState !== WebSocket.OPEN) {
     return;
   }
 
   socket.send(JSON.stringify({ type: "message", message }));
   messageInput.value = "";
   messageInput.focus();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && shouldReconnect && !socketIsActive()) {
+    scheduleReconnect(0);
+  }
+});
+
+window.addEventListener("online", () => {
+  if (shouldReconnect && !socketIsActive()) {
+    scheduleReconnect(0);
+  }
+});
+
+window.addEventListener("offline", () => {
+  if (shouldReconnect) {
+    setConnected(false);
+    chatNotice.textContent = "Waiting for internet…";
+  }
 });
 
 messageInput.addEventListener("keydown", (event) => {

@@ -20,7 +20,7 @@ VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
 VAPID_SUBJECT = os.environ.get(
     "VAPID_SUBJECT",
-    "https://chatapp-production-9daf.up.railway.app/",
+    "https://chatapp-production-9daf.up.railway.app",
 )
 
 if not CHAT_PASSWORD:
@@ -61,21 +61,33 @@ database = open_database()
 
 
 async def index(_request):
-    return web.FileResponse(PROJECT_DIR / "index.htm")
+    return web.FileResponse(
+        PROJECT_DIR / "index.htm",
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 async def javascript(_request):
-    return web.FileResponse(PROJECT_DIR / "practice.js")
+    return web.FileResponse(
+        PROJECT_DIR / "practice.js",
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 async def stylesheet(_request):
-    return web.FileResponse(PROJECT_DIR / "styles.css")
+    return web.FileResponse(
+        PROJECT_DIR / "styles.css",
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 async def manifest(_request):
     return web.FileResponse(
         PROJECT_DIR / "manifest.webmanifest",
-        headers={"Content-Type": "application/manifest+json"},
+        headers={
+            "Cache-Control": "no-cache",
+            "Content-Type": "application/manifest+json",
+        },
     )
 
 
@@ -159,6 +171,7 @@ async def send_push_notifications(sender):
         }
     )
     expired_endpoints = []
+    delivered = 0
 
     for endpoint, p256dh, auth in subscriptions:
         try:
@@ -172,6 +185,7 @@ async def send_push_notifications(sender):
                 vapid_claims={"sub": VAPID_SUBJECT},
                 ttl=60 * 60,
             )
+            delivered += 1
         except WebPushException as error:
             response = getattr(error, "response", None)
             status = getattr(response, "status", None)
@@ -179,8 +193,13 @@ async def send_push_notifications(sender):
                 status = getattr(response, "status_code", None)
             if status in {404, 410}:
                 expired_endpoints.append(endpoint)
+            else:
+                print(f"Push service rejected a notification with status {status or 'unknown'}")
         except Exception as error:
             print(f"Push notification failed: {error}")
+
+    if delivered:
+        print(f"Delivered {delivered} push notification(s) for a message from {sender}")
 
     if expired_endpoints:
         database.executemany(
@@ -191,7 +210,7 @@ async def send_push_notifications(sender):
 
 
 async def websocket_handler(request):
-    websocket = web.WebSocketResponse()
+    websocket = web.WebSocketResponse(heartbeat=30)
     await websocket.prepare(request)
 
     try:
